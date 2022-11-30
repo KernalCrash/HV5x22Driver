@@ -1,2 +1,3 @@
 # HV5x22Driver
-Driving the high voltage capable serial-to-parallel converters (HV5x22 shift registers). Work in progress.
+This is for driving the high voltage capable serial-to-parallel converters (HV5x22 shift registers) from an MCU. Inspired by https://github.com/doayee/Nixie. I only need the HV-chip driver core functionality and found that the original solution does not compile in an ESP32 environment. Also, the digitalWrite() instructions to drive the chip signals without an additional delay, to generate the shift register control protocol, don't work reliably for me when the HV control logic is operated at 3.3V. Either the timing is too strict or the operating voltage is too low (it is well below the recommended 12V but still safely within the allowed range of parameters). One way or another, this has to be solved for an ESP32 based solution. Work in progress.
+Example to follow.
