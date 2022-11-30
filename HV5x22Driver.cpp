@@ -6,10 +6,11 @@
  * Modified   : ---
 */
 
+#include <Arduino.h>
 #include "HV5x22Driver.h"
 
 
-HV5x22Driver::HV5x22Driver(int dataIn, int clkIn, int oe, int str, bool lsbFirst = true) {
+HV5x22Driver::HV5x22Driver(int dataIn, int clkIn, int oe, int str, bool lsbFirst) {
   _dataIn = dataIn;
   _clkIn = clkIn;
   _oe = oe;
@@ -30,7 +31,7 @@ HV5x22Driver::HV5x22Driver(int dataIn, int clkIn, int oe, int str, bool lsbFirst
   digitalWrite(_str, HIGH);
 }
 
-HV5x22Driver::HV5x22Driver(int dataIn, int clkIn, int le, int bl, int pol, bool lsbFirst = true) {
+HV5x22Driver::HV5x22Driver(int dataIn, int clkIn, int le, int bl, int pol, bool lsbFirst) {
   _dataIn = dataIn;
   _clkIn = clkIn;
   _le = le;

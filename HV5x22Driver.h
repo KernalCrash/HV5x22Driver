@@ -12,8 +12,8 @@
 class HV5x22Driver {
 
  public:
-  HV5x22Driver(int dataIn, int clkIn, int oe, int str, bool lsbFirst);  // HV5122 / HV5222
-  HV5x22Driver(int dataIn, int clkIn, int le, int bl, int pol, bool lsbFirst);  // HV5522
+  HV5x22Driver(int dataIn, int clkIn, int oe, int str, bool lsbFirst = true);  // HV5122 / HV5222
+  HV5x22Driver(int dataIn, int clkIn, int le, int bl, int pol, bool lsbFirst = true);  // HV5522
   ~HV5x22Driver();
 
 
