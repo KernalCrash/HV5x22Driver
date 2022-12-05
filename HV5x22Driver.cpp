@@ -10,13 +10,13 @@
 #include "HV5x22Driver.h"
 
 
-HV5x22Driver::HV5x22Driver(int dataIn, int clkIn, int oe, int str, bool lsbFirst) {
+HV5x22Driver::HV5x22Driver(int dataIn, int clkIn, int oe, int str) {
   _dataIn = dataIn;
   _clkIn = clkIn;
   _oe = oe;
   _str = str;
-  _lsbFirst = lsbFirst;
   _latched = false;
+  _slack = 1;  // 1µs
 
   // mode
   pinMode(_dataIn, OUTPUT);
@@ -25,20 +25,20 @@ HV5x22Driver::HV5x22Driver(int dataIn, int clkIn, int oe, int str, bool lsbFirst
   pinMode(_str,  OUTPUT);
 
   // initital config
-  digitalWrite(_dataIn, LOW);
-  digitalWrite(_clkIn, LOW);
-  digitalWrite(_oe,  LOW);
-  digitalWrite(_str, HIGH);
+  digitalWriteSlacked(_dataIn, LOW, _slack);
+  digitalWriteSlacked(_clkIn, LOW, _slack);
+  digitalWriteSlacked(_oe,  LOW, _slack);
+  digitalWriteSlacked(_str, HIGH, _slack);
 }
 
-HV5x22Driver::HV5x22Driver(int dataIn, int clkIn, int le, int bl, int pol, bool lsbFirst) {
+HV5x22Driver::HV5x22Driver(int dataIn, int clkIn, int le, int bl, int pol) {
   _dataIn = dataIn;
   _clkIn = clkIn;
   _le = le;
   _bl = bl;
   _pol = pol;
-  _lsbFirst = lsbFirst;
   _latched = true;
+  _slack = 1;  // 1µs
 
   // mode
   pinMode(_dataIn, OUTPUT);
@@ -48,69 +48,51 @@ HV5x22Driver::HV5x22Driver(int dataIn, int clkIn, int le, int bl, int pol, bool 
   pinMode(_pol,  OUTPUT);
   
   // initital config
-  digitalWrite(_dataIn, LOW);
-  digitalWrite(_clkIn, LOW);
-  digitalWrite(_le,  LOW);
-  digitalWrite(_bl, HIGH);
-  digitalWrite(_pol, HIGH);
+  digitalWriteSlacked(_dataIn, LOW, _slack);
+  digitalWriteSlacked(_clkIn, LOW, _slack);
+  digitalWriteSlacked(_le,  LOW, _slack);
+  digitalWriteSlacked(_bl, HIGH, _slack);
+  digitalWriteSlacked(_pol, HIGH, _slack);
 }
 
 HV5x22Driver::~HV5x22Driver() {
 }
 
-void HV5x22Driver::send(char* data) {
-  for(int i=0; i<sizeof(data); i++) {
-    transmit(data[i], _lsbFirst);
-  }
+void HV5x22Driver::send(uint32_t data, BitOrder bitOrder) {
+  _lsbFirst = (bitOrder==LSBITFIRST)?true:false;
+  if (_latched) { /* nothing to do here */ } else { blank(true); }
+  transmit(data);
+  if (_latched) { latchData(); } else { blank(false); }  // make result visible
 }
 
-void HV5x22Driver::clearShr(int numBytes) {
-  char clear[] = {0};
-  for (int i=0; i<numBytes; i++) {
-    send(clear);  // sending numBytes x 8 bits worth of 0s down the shift register
-  }
+void HV5x22Driver::clearShr() {
+  send((uint32_t)(0));  // sending 32 bits worth of 0s down the shift register
 }
 
 void HV5x22Driver::blank(bool isBlank) {
-  digitalWrite(_oe, isBlank?LOW:HIGH);
+  digitalWriteSlacked(_oe, isBlank?LOW:HIGH, _slack);
 }
 
 void HV5x22Driver::latchData() {
-  digitalWrite(_bl, HIGH);
-  digitalWrite(_pol, HIGH);
-  digitalWrite(_le, LOW);
-  vTaskDelay(1);
-  digitalWrite(_le, HIGH);
-  vTaskDelay(1);
+  digitalWriteSlacked(_bl, HIGH, _slack);
+  digitalWriteSlacked(_pol, HIGH, _slack);
+  digitalWriteSlacked(_le, LOW, _slack);
+  digitalWriteSlacked(_le, HIGH, _slack);
 }
 
-void HV5x22Driver::transmit(char byte, bool lsbFirst) {
-  const int width = 8;  // the min data cell to send is 8 bits wide
-  const int slack = 1;  // wait 1ms between toggling the signals
-
-  if (_latched) {
-    // nothing to do here
-  }
-  else {
-    blank(false);
-  }
+void HV5x22Driver::transmit(uint32_t data) {
+  const int width = 32;  // the min data cell to send is 8 bits wide
 
   // shift the data out bitwise
   for (int i=0; i<width; i++) {
-    bool bitToSend = byte & (1<<(lsbFirst?i:width-1-i));
-    digitalWrite(_clkIn, HIGH);
-    vTaskDelay(slack);
-    digitalWrite(_dataIn, bitToSend);
-    vTaskDelay(slack);
-    digitalWrite(_clkIn, LOW);
-    vTaskDelay(slack);
+    //bool bitToSend = data & (1<<(lsbFirst?i:width-1-i));
+    digitalWriteSlacked(_clkIn, HIGH, _slack);
+    digitalWriteSlacked(_dataIn, (data >> (_lsbFirst?i:width-1-i)) & 1, _slack);
+    digitalWriteSlacked(_clkIn, LOW, _slack);
   }
+}
 
-  // make result visible
-  if (_latched) {
-    latchData();
-  }
-  else {
-    blank(true);
-  }
+void HV5x22Driver::digitalWriteSlacked(int pin, int data, int postWriteSlack) {
+  digitalWrite(pin, data);
+  delayMicroseconds(postWriteSlack);
 }

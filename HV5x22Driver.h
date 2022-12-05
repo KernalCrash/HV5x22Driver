@@ -9,16 +9,23 @@
 #ifndef HV5X22DRIVER
 #define HV5X22DRIVER
 
+
 class HV5x22Driver {
 
  public:
-  HV5x22Driver(int dataIn, int clkIn, int oe, int str, bool lsbFirst = true);  // HV5122 / HV5222
-  HV5x22Driver(int dataIn, int clkIn, int le, int bl, int pol, bool lsbFirst = true);  // HV5522
+  enum BitOrder: unsigned char { 
+    LSBITFIRST = 0,
+    MSBITFIRST
+  };
+
+
+  HV5x22Driver(int dataIn, int clkIn, int oe, int str);  // HV5122 / HV5222
+  HV5x22Driver(int dataIn, int clkIn, int le, int bl, int pol);  // HV5522
   ~HV5x22Driver();
 
 
-  void send(char* data);
-  void clearShr(int numBytes);
+  void send(uint32_t data, BitOrder bitOrder = LSBITFIRST);
+  void clearShr();
 
   
  private:
@@ -30,6 +37,7 @@ class HV5x22Driver {
   int _le;
   int _bl;
   int _pol;
+  int _slack;
 
   // flow control
   bool _lsbFirst;
@@ -38,8 +46,8 @@ class HV5x22Driver {
   // Helpers
   void blank(bool isBlank);
   void latchData();
-  void transmit(char byte, bool lsbFirst);
-
+  void transmit(uint32_t data);
+  void digitalWriteSlacked(int pin, int data, int postWriteSlack);
 };
 
 #endif  // HV5X22DRIVER
