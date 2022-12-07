@@ -58,11 +58,24 @@ HV5x22Driver::HV5x22Driver(int dataIn, int clkIn, int le, int bl, int pol) {
 HV5x22Driver::~HV5x22Driver() {
 }
 
-void HV5x22Driver::send(uint32_t data, BitOrder bitOrder) {
+void HV5x22Driver::send(uint32_t data, BitOrder bitOrder, bool transactionFinished) {
   _lsbFirst = (bitOrder==LSBITFIRST)?true:false;
-  if (_latched) { /* nothing to do here */ } else { blank(true); }
+  if (_latched) {
+    // nothing to do here
+  }
+  else {
+    blank(true);
+  }
   transmit(data);
-  if (_latched) { latchData(); } else { blank(false); }  // make result visible
+  // if there is more to come, e. g. loading a cascaded shift register, do not finish just yet
+  if (transactionFinished) {
+    if (_latched) {
+      latchData();
+    }
+    else {
+      blank(false);  // make result visible
+    }
+  }
 }
 
 void HV5x22Driver::clearShr() {

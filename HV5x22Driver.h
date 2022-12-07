@@ -24,7 +24,7 @@ class HV5x22Driver {
   ~HV5x22Driver();
 
 
-  void send(uint32_t data, BitOrder bitOrder = LSBITFIRST);
+  void send(uint32_t data, BitOrder bitOrder = LSBITFIRST, bool transactionFinished=true);
   void clearShr();
 
   
