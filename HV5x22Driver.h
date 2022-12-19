@@ -25,7 +25,7 @@ class HV5x22Driver {
 
 
   void send(uint32_t data, BitOrder bitOrder = LSBITFIRST, bool transactionFinished=true);
-  void clearShr();
+  void clearShr(uint numOfCascadedChips = 1);
 
   
  private:

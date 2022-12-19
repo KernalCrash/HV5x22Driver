@@ -78,8 +78,12 @@ void HV5x22Driver::send(uint32_t data, BitOrder bitOrder, bool transactionFinish
   }
 }
 
-void HV5x22Driver::clearShr() {
-  send((uint32_t)(0));  // sending 32 bits worth of 0s down the shift register
+void HV5x22Driver::clearShr(uint numOfCascadedChips) {
+  const uint32_t clearPat = (uint32_t)(0);
+
+  for (int i=0; i<numOfCascadedChips; i++) {
+    send(clearPat, LSBITFIRST, (i==(numOfCascadedChips-1)?true:false));  // sending 32 bits worth of 0
+  }
 }
 
 void HV5x22Driver::blank(bool isBlank) {
@@ -94,7 +98,7 @@ void HV5x22Driver::latchData() {
 }
 
 void HV5x22Driver::transmit(uint32_t data) {
-  const int width = 32;  // the min data cell to send is 8 bits wide
+  const int width = 32;  // the min data cell to send is 32 bits wide
 
   // shift the data out bitwise
   for (int i=0; i<width; i++) {
